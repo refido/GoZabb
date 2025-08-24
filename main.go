@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"go-crud-zabbix/helpers"
 	"go-crud-zabbix/zabbix"
+
 	"github.com/joho/godotenv"
 )
 
@@ -21,7 +23,12 @@ func mustGetenv(key string) string {
 }
 
 func main() {
-	// Load .env if present (non-fatal if missing; useful in prod where real env is provided)
+	// Ensure .env file exists (copies from .env.example if missing)
+	if err := helpers.EnsureEnvFile(); err != nil {
+		log.Fatal("Failed to ensure .env file:", err)
+	}
+
+	// Load .env if present
 	_ = godotenv.Load()
 
 	api := mustGetenv("ZABBIX_API")
@@ -45,7 +52,7 @@ func main() {
 
 func getHosts(w http.ResponseWriter, r *http.Request) {
 	result, err := zbx.Call("host.get", map[string]interface{}{
-		"output":           []string{"hostid", "host", "name"},
+		"output":           []string{"hostid", "host"},
 		"selectInterfaces": []string{"interfaceid", "ip"},
 		"selectGroups":     []string{"groupid", "name"},
 		"sortfield":        "host",
